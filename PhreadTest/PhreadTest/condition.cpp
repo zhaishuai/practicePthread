@@ -20,15 +20,12 @@ namespace condition {
         while(true){
             
             printf("%s\n", (char *)data);
+            
             pthread_mutex_lock(&mutex);
+            pthread_mutex_unlock(&mutex2);
             pthread_cond_wait(&cond, &mutex);
             pthread_mutex_unlock(&mutex);
-            
-            pthread_mutex_lock(&mutex2);
-            pthread_cond_signal(&cond2);
-            pthread_mutex_unlock(&mutex2);
-            
-            
+
         }
         return NULL;
     }
@@ -36,16 +33,13 @@ namespace condition {
     
     void *unlockCondThread(void *data){
         while (true) {
+        
             printf("%s\n", (char *)data);
+            pthread_mutex_lock(&mutex2);
             pthread_mutex_lock(&mutex);
             pthread_cond_signal(&cond);
             pthread_mutex_unlock(&mutex);
-            
-            pthread_mutex_lock(&mutex2);
-            pthread_cond_wait(&cond2, &mutex2);
-            pthread_mutex_unlock(&mutex2);
-            
-            sleep(1);
+
         }
     }
     
