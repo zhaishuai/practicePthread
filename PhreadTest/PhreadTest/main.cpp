@@ -17,10 +17,13 @@ int main(int argc, const char * argv[]) {
 //    create::run();
     
 //    condition::run();
+    
     for(int i = 0; i < 100000  ; i++){
-    threadPool::Thread thread;
-        thread.startThread([]{
-            printf("hello\n");
+        
+        threadPool::Thread thread;
+        thread.startThread([&i]{
+            
+            printf("hello ,%d\n", i-1);
         });
     }
     sleep(100);

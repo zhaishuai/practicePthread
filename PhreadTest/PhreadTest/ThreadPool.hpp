@@ -18,6 +18,7 @@
 #include <err.h>
 #include <vector>
 #include <functional>
+#include <queue>
 
 namespace threadPool{
     
@@ -33,15 +34,25 @@ namespace threadPool{
         
     
     public:
+        bool shouldQuit = false;
         ThreadInfo threadInfo;
         Thread();
-        void startThread(const std::function<void ()> func);
+        
+        void startThread(std::function<void ()> func);
     
     };
     
     class ThreadPool{
     public:
+        int miniThreads = 5;
+        int maxThreads  = 25;
+        
+        std::unique_ptr<std::queue<Thread>> idleQueue;
+        
+        std::unique_ptr<std::queue<Thread>> workQueue;
+        
         ThreadPool();
+        
     protected:
         
     };
