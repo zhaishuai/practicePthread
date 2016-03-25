@@ -10,12 +10,20 @@
 #include <stdlib.h>
 #include "learnPthreadCreate.hpp"
 #include "condition.hpp"
+#include "ThreadPool.hpp"
 
 int main(int argc, const char * argv[]) {
     
 //    create::run();
     
-    condition::run();
+//    condition::run();
+    for(int i = 0; i < 100000  ; i++){
+    threadPool::Thread thread;
+        thread.startThread([]{
+            printf("hello\n");
+        });
+    }
+    sleep(100);
     
     return 0;
 }
