@@ -70,7 +70,7 @@ namespace threadPool{
                     if(taskQueue->size()){
                         printf("ni hao wo lai le\n");
                         func = taskQueue->front();
-                        taskQueue->erase (taskQueue->begin(),taskQueue->begin()+1);
+                        taskQueue->erase(taskQueue->begin()+0);
                     }
                     pthread_mutex_unlock(&taskQueueMutex);
                     if(func!=nullptr)

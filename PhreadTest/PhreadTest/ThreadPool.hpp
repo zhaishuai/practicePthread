@@ -44,7 +44,7 @@ namespace threadPool{
     
     class ThreadPool{
     public:
-        int miniThreads = 5;
+        int miniThreads = 50;
         int maxThreads  = 25;
         
         pthread_mutex_t idleQueueMutex;
