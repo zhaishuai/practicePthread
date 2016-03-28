@@ -74,7 +74,7 @@ namespace threadPool{
         
     protected:
         int currentThreads = miniThreads;
-        
+        pthread_rwlock_t quitRwlock;
         std::function<void ()> finishCallback;
         
     };

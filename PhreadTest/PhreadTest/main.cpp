@@ -32,6 +32,7 @@ int main(int argc, const char * argv[]) {
 //            printf("hello ,%d\n", i-1);
 //        });
 //    }
+    for( int j = 0; j  < 100 ; j++){
     
     threadPool::ThreadPool threadPool;
 
@@ -39,10 +40,10 @@ int main(int argc, const char * argv[]) {
     threadPool.run([i]{
         printf("@@@@@@@@@@@@:%d\n", i);
         
-//        struct timeval delay;
-//        delay.tv_sec = 0;
-//        delay.tv_usec = 10 * 1000; // 20 ms
-//        select(0, NULL, NULL, NULL, &delay);
+        struct timeval delay;
+        delay.tv_sec = 0;
+        delay.tv_usec = 10 * 1000; // 20 ms
+        select(0, NULL, NULL, NULL, &delay);
         
     });
     
@@ -56,6 +57,7 @@ int main(int argc, const char * argv[]) {
         printf("work quantity: %ld\n", threadPool.workQueue->size());
     });
     printf("main\n");
+}
 //    sleep(5);
  
     

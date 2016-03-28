@@ -18,7 +18,7 @@ namespace threadPool{
         pthread_mutex_unlock(&mutex);
         ThreadData *threadData = ((ThreadData *)data);
         
-        pthread_testcancel();
+//        pthread_testcancel();
         threadData->callback();
         pthread_exit(0);
     }
@@ -53,12 +53,14 @@ namespace threadPool{
         idleQueueMutex = PTHREAD_MUTEX_INITIALIZER;
         workQueueMutex = PTHREAD_MUTEX_INITIALIZER;
         taskQueueMutex = PTHREAD_MUTEX_INITIALIZER;
+        quitRwlock     = PTHREAD_RWLOCK_INITIALIZER;
         
         for(int i = 0 ; i < miniThreads ; i++){
             std::shared_ptr<Thread> reusedThread = std::shared_ptr<Thread>(new Thread());
             reusedThread->startThread([reusedThread, this]{
                 std::shared_ptr<Thread> thread = reusedThread;
                 while(true){
+                    pthread_rwlock_rdlock(&quitRwlock);
                     pthread_mutex_lock(&taskQueueMutex);
                     
                     pthread_testcancel();
@@ -75,11 +77,12 @@ namespace threadPool{
                     pthread_mutex_lock(&taskQueueMutex);
                     if(taskQueue->size()){
                         pthread_mutex_unlock(&taskQueueMutex);
+                        pthread_rwlock_unlock(&quitRwlock);
                         continue;
                     }
                     pthread_mutex_unlock(&taskQueueMutex);
 
-                    pthread_testcancel();
+//                    pthread_testcancel();
                     
                     pthread_mutex_lock(&idleQueueMutex);
                     idleQueue->push_back(thread);
@@ -93,7 +96,9 @@ namespace threadPool{
                     }
                     pthread_mutex_unlock(&idleQueueMutex);
                     
-                    pthread_testcancel();
+//                    pthread_testcancel();
+                    
+                    pthread_rwlock_unlock(&quitRwlock);
                     
                     pthread_mutex_lock(&thread->threadInfo.mut);
                     pthread_cond_wait(&thread->threadInfo.cond, &thread->threadInfo.mut);
@@ -137,20 +142,24 @@ namespace threadPool{
     
     
     ThreadPool::~ThreadPool(){
-        pthread_mutex_lock(&idleQueueMutex);
+        
+        pthread_rwlock_wrlock(&quitRwlock);
+//        pthread_mutex_lock(&idleQueueMutex);
         
         for(int i = 0 ; i < idleQueue->size(); i++){
             std::shared_ptr<Thread> thread = idleQueue->at(i);
             thread->stopThread();
+//            pthread_rwlock_unlock(&quitRwlock);
         }
         for(int i = 0 ; i < workQueue->size(); i++){
             std::shared_ptr<Thread> thread = workQueue->at(i);
             thread->stopThread();
+//            pthread_rwlock_unlock(&quitRwlock);
         }
         
+//        pthread_mutex_unlock(&idleQueueMutex);
+        pthread_rwlock_unlock(&quitRwlock);
         
-        
-        pthread_mutex_unlock(&idleQueueMutex);
     }
     
 }
