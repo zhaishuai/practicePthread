@@ -45,8 +45,8 @@ namespace threadPool{
     
     class ThreadPool{
     public:
-        int miniThreads = 150;
-        int maxThreads  = 25;
+        int miniThreads = 5;
+        int maxThreads  = 500;
         
         pthread_mutex_t idleQueueMutex;
         std::unique_ptr<std::queue<std::shared_ptr<Thread>>> idleQueue;
@@ -55,7 +55,6 @@ namespace threadPool{
         std::unique_ptr<std::vector<std::shared_ptr<Thread>>> workQueue;
         
         pthread_mutex_t taskQueueMutex;
-//        std::unique_ptr<std::vector<std::function<void()>>> taskQueue;
         std::unique_ptr<std::deque<std::function<void()>>> taskQueue;
         
         ThreadPool();
