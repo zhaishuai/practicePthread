@@ -54,7 +54,7 @@ namespace threadPool{
     ThreadPool::ThreadPool(){
         idleQueue = std::unique_ptr<std::queue<std::shared_ptr<Thread>>>(new std::queue<std::shared_ptr<Thread>>);
         workQueue = std::unique_ptr<std::vector<std::shared_ptr<Thread>>>(new std::vector<std::shared_ptr<Thread>>);
-        taskQueue = std::unique_ptr<std::vector<std::function<void()>>>(new std::vector<std::function<void()>>);
+        taskQueue = std::unique_ptr<std::deque<std::function<void()>>>(new std::deque<std::function<void ()>>);
         
         idleQueueMutex = PTHREAD_MUTEX_INITIALIZER;
         workQueueMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -68,18 +68,12 @@ namespace threadPool{
                     pthread_mutex_lock(&taskQueueMutex);
                     std::function<void()> func;
                     if(taskQueue->size()){
-                        printf("ni hao wo lai le\n");
                         func = taskQueue->front();
-                        taskQueue->erase(taskQueue->begin()+0);
+                        taskQueue->pop_front();
                     }
                     pthread_mutex_unlock(&taskQueueMutex);
                     if(func!=nullptr)
                         func();
-                    else{
-                        printf("func is null\n");
-                    }
-                    
-                    
                     
                     pthread_mutex_lock(&taskQueueMutex);
                     if(taskQueue->size()){
@@ -92,6 +86,13 @@ namespace threadPool{
                     pthread_mutex_lock(&idleQueueMutex);
                     idleQueue->push(thread);
                     workQueue->erase(std::remove(workQueue->begin(), workQueue->end(), thread), workQueue->end());
+                    
+                    if(idleQueue->size() == currentThreads){
+                        taskQueue->shrink_to_fit();
+                        if(finishCallback != nullptr){
+                            finishCallback();
+                        }
+                    }
                     pthread_mutex_unlock(&idleQueueMutex);
                     
                     pthread_mutex_lock(&thread->threadInfo.mut);
@@ -101,8 +102,6 @@ namespace threadPool{
             });
 
         }
-        
-//        printf("init finished\n");
 
     }
     
@@ -117,6 +116,7 @@ namespace threadPool{
             workQueue->push_back(thread);
         }
         pthread_mutex_unlock(&idleQueueMutex);
+    
         
         pthread_mutex_lock(&taskQueueMutex);
         taskQueue->push_back(func);
@@ -128,6 +128,10 @@ namespace threadPool{
             pthread_mutex_unlock(&thread->threadInfo.mut);
         }
         
+    }
+    
+    void ThreadPool::allTaskFinished(std::function<void ()> func){
+        finishCallback = func;
     }
     
 }

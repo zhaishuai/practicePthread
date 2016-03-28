@@ -36,6 +36,7 @@ namespace threadPool{
     public:
         bool shouldQuit = false;
         ThreadInfo threadInfo;
+        
         Thread();
         
         void startThread(std::function<void ()> func);
@@ -44,7 +45,7 @@ namespace threadPool{
     
     class ThreadPool{
     public:
-        int miniThreads = 50;
+        int miniThreads = 150;
         int maxThreads  = 25;
         
         pthread_mutex_t idleQueueMutex;
@@ -54,14 +55,20 @@ namespace threadPool{
         std::unique_ptr<std::vector<std::shared_ptr<Thread>>> workQueue;
         
         pthread_mutex_t taskQueueMutex;
-        std::unique_ptr<std::vector<std::function<void()>>> taskQueue;
+//        std::unique_ptr<std::vector<std::function<void()>>> taskQueue;
+        std::unique_ptr<std::deque<std::function<void()>>> taskQueue;
         
         ThreadPool();
         
         void run(std::function<void()> func);
         
+        void allTaskFinished(std::function<void ()> func);
+        
         
     protected:
+        int currentThreads = miniThreads;
+        
+        std::function<void ()> finishCallback;
         
     };
     
