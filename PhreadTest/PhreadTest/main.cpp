@@ -12,9 +12,13 @@
 #include "condition.hpp"
 #include "ThreadPool.hpp"
 #include <list>
+#include <time.h>
+
+#include "ctpl_stl.h"
 
 int main(int argc, const char * argv[]) {
-    
+    time_t t_start, t_end;
+    t_start = time(NULL) ;
 //    create::run();
     
 //    condition::run();
@@ -22,8 +26,9 @@ int main(int argc, const char * argv[]) {
 //    for(int i = 0; i < 100000  ; i++){
 //        
 //        threadPool::Thread thread;
-//        thread.startThread([&i]{
+//        thread.startThread([&i, &thread]{
 //            
+//            thread.stopThread();
 //            printf("hello ,%d\n", i-1);
 //        });
 //    }
@@ -42,7 +47,9 @@ int main(int argc, const char * argv[]) {
     });
     
     
-    threadPool.allTaskFinished([&threadPool]{
+    threadPool.allTaskFinished([&threadPool, &t_end, &t_start]{
+        t_end = time(NULL) ;
+        printf("time: %.0f s\n", difftime(t_end,t_start)) ;
         printf("all finished!\n");
         printf("idle quantity: %ld\n", threadPool.idleQueue->size());
         printf("task quantity: %ld\n", threadPool.taskQueue->size());
@@ -52,15 +59,17 @@ int main(int argc, const char * argv[]) {
 //    sleep(5);
  
     
-    while (true) {
-        
-        printf("idle quantity: %ld\n", threadPool.idleQueue->size());
-        printf("task quantity: %ld\n", threadPool.taskQueue->size());
-        printf("work quantity: %ld\n", threadPool.workQueue->size());
-        
-        sleep(1);
-    }
+//    while (true) {
+//        
+//        printf("idle quantity: %ld\n", threadPool.idleQueue->size());
+//        printf("task quantity: %ld\n", threadPool.taskQueue->size());
+//        printf("work quantity: %ld\n", threadPool.workQueue->size());
+//        
+//        sleep(1);
+//    }
     
+    
+//    
 //    for(int i = 0 ; i < 1000000; i++){
 //        printf("%ld\n", sizeof(std::function<void ()>));
 //    }
@@ -80,11 +89,22 @@ int main(int argc, const char * argv[]) {
 //    
 //    while (true) {
 ////        std::deque<double>(queue).swap(queue);
-//        printf("ni hao sizeOfQueue:%ld !\n", queue.size());
+////        printf("ni hao sizeOfQueue:%ld !\n", queue.size());
 //        sleep(1);
 //    }
 
-
+    
+//    ctpl::thread_pool p(150 /* two threads in the pool */);
+//    for(int i = 0; i < 4000000; i++){
+//        p.push([i](int id){
+//            printf("@@@@@@@@@@@@:%d\n", i);
+//        });
+//    }
+    
+    
+    
+//    t_end = time(NULL) ;
+//    printf("time: %.0f s\n", difftime(t_end,t_start)) ;
     
     return 0;
 }

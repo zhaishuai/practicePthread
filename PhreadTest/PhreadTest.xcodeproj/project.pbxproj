@@ -26,6 +26,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D96656C51CA904FB003C0736 /* ctpl_stl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ctpl_stl.h; sourceTree = "<group>"; };
 		D97ADCFE1CA232C500BEFC1C /* PhreadTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = PhreadTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D97ADD011CA232C500BEFC1C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D9EF6BCC1CA3D3BF000E4FA9 /* learnPthreadCreate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = learnPthreadCreate.cpp; sourceTree = "<group>"; };
@@ -66,6 +67,7 @@
 		D97ADD001CA232C500BEFC1C /* PhreadTest */ = {
 			isa = PBXGroup;
 			children = (
+				D96656C51CA904FB003C0736 /* ctpl_stl.h */,
 				D97ADD011CA232C500BEFC1C /* main.cpp */,
 				D9EF6BCF1CA3D6DF000E4FA9 /* condition.cpp */,
 				D9EF6BD01CA3D6DF000E4FA9 /* condition.hpp */,
