@@ -42,20 +42,53 @@ namespace threadPool{
 
 #pragma mark - Timer
     
-    Timer::Timer(double timeInterval){
-        Timer(0, timeInterval);
-    }
-    
-    Timer::Timer(double delay, double timeInterval){
+    Timer::Timer(int timeInterval){
         thread = std::unique_ptr<Thread>(new Thread);
-        this->delay = delay;
+        this->delaytime = 0;
         this->timeInterval = timeInterval;
+        mut = PTHREAD_MUTEX_INITIALIZER;
     }
     
-    void Timer::start(std::function<void ()> func){
+    Timer::Timer(int delay, int timeInterval){
+        thread = std::unique_ptr<Thread>(new Thread);
+        this->delaytime = delay;
+        this->timeInterval = timeInterval;
+        mut = PTHREAD_MUTEX_INITIALIZER;
         
     }
     
+    void Timer::start(std::function<void ()> func){
+        timeStarted = true;
+        thread->startThread([&func, this]{
+            
+            while (true) {
+                usleep(this->delaytime*1000);
+                if(func!=nullptr){
+                    func();
+                }
+                usleep(this->timeInterval*1000);
+                pthread_mutex_lock(&mut);
+                if(!timeStarted){
+                    break;
+                }
+                pthread_mutex_unlock(&mut);
+            }
+            
+        });
+    }
+    
+    void Timer::stop(){
+        pthread_mutex_lock(&mut);
+        timeStarted = false;
+        pthread_mutex_unlock(&mut);
+    }
+    
+//    Timer::~Timer(){
+//        stop();
+//        while (size != 0) {
+//            sched_yield();
+//        }
+//    }
     
 #pragma mark - ThreadPool
     

@@ -54,13 +54,19 @@ namespace threadPool{
     class Timer{
     protected:
         std::unique_ptr<Thread> thread;
-        double timeInterval = 0;
-        double delay = 0;
+        int timeInterval = 0;
+        int delaytime = 0;
         bool timeStarted = false;
+        pthread_mutex_t mut;
     public:
-        Timer(double timeInterval);
-        Timer(double delay, double timeInterval);
+        Timer(int timeInterval);
+        
+        // 都是以毫秒为单位
+        //
+        Timer(int delay, int timeInterval);
+//        ~Timer();
         void start(std::function<void ()> func);
+        void stop();
     };
     
     class ThreadPool{
