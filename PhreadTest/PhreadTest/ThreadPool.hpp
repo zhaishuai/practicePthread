@@ -56,6 +56,8 @@ namespace threadPool{
         int miniThreads = 150;
         int maxThreads  = 500;
         
+        
+        
         pthread_mutex_t idleQueueMutex;
         std::unique_ptr<std::deque<std::shared_ptr<Thread>>> idleQueue;
         
@@ -70,11 +72,13 @@ namespace threadPool{
         
         void run(std::function<void()> func);
         
+        void stop();
+        
         void allTaskFinished(std::function<void ()> func);
         
     protected:
         int currentThreads = miniThreads;
-        pthread_rwlock_t quitRwlock;
+        
         std::function<void ()> finishCallback;
         
     };

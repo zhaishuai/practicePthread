@@ -13,12 +13,10 @@ namespace threadPool{
     static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     
     
-    
     void *threadCallback(void *data){
         pthread_mutex_unlock(&mutex);
         ThreadData *threadData = ((ThreadData *)data);
         
-//        pthread_testcancel();
         threadData->callback();
         pthread_exit(0);
     }
@@ -44,7 +42,6 @@ namespace threadPool{
 
 #pragma mark - ThreadPool
     
-    
     ThreadPool::ThreadPool(){
         idleQueue = std::unique_ptr<std::deque<std::shared_ptr<Thread>>>(new std::deque<std::shared_ptr<Thread>>);
         workQueue = std::unique_ptr<std::vector<std::shared_ptr<Thread>>>(new std::vector<std::shared_ptr<Thread>>);
@@ -53,18 +50,14 @@ namespace threadPool{
         idleQueueMutex = PTHREAD_MUTEX_INITIALIZER;
         workQueueMutex = PTHREAD_MUTEX_INITIALIZER;
         taskQueueMutex = PTHREAD_MUTEX_INITIALIZER;
-        quitRwlock     = PTHREAD_RWLOCK_INITIALIZER;
         
         for(int i = 0 ; i < miniThreads ; i++){
             std::shared_ptr<Thread> reusedThread = std::shared_ptr<Thread>(new Thread());
             reusedThread->startThread([reusedThread, this]{
                 std::shared_ptr<Thread> thread = reusedThread;
                 while(true){
-                    pthread_rwlock_rdlock(&quitRwlock);
-                    pthread_mutex_lock(&taskQueueMutex);
-                    
                     pthread_testcancel();
-                    
+                    pthread_mutex_lock(&taskQueueMutex);
                     std::function<void()> func;
                     if(taskQueue->size()){
                         func = taskQueue->front();
@@ -77,12 +70,9 @@ namespace threadPool{
                     pthread_mutex_lock(&taskQueueMutex);
                     if(taskQueue->size()){
                         pthread_mutex_unlock(&taskQueueMutex);
-                        pthread_rwlock_unlock(&quitRwlock);
                         continue;
                     }
                     pthread_mutex_unlock(&taskQueueMutex);
-
-//                    pthread_testcancel();
                     
                     pthread_mutex_lock(&idleQueueMutex);
                     idleQueue->push_back(thread);
@@ -95,10 +85,6 @@ namespace threadPool{
                         }
                     }
                     pthread_mutex_unlock(&idleQueueMutex);
-                    
-//                    pthread_testcancel();
-                    
-                    pthread_rwlock_unlock(&quitRwlock);
                     
                     pthread_mutex_lock(&thread->threadInfo.mut);
                     pthread_cond_wait(&thread->threadInfo.cond, &thread->threadInfo.mut);
@@ -139,26 +125,38 @@ namespace threadPool{
         finishCallback = func;
     }
     
-    
+    void ThreadPool::stop(){
+        pthread_mutex_lock(&taskQueueMutex);
+        taskQueue->clear();
+        pthread_mutex_unlock(&taskQueueMutex);
+        
+        long size = 1;
+        
+        while (size != 0) {
+            pthread_mutex_lock(&idleQueueMutex);
+            size = workQueue->size();
+            sched_yield();
+            pthread_mutex_unlock(&idleQueueMutex);
+            
+        }
+    }
     
     ThreadPool::~ThreadPool(){
         
-        pthread_rwlock_wrlock(&quitRwlock);
-//        pthread_mutex_lock(&idleQueueMutex);
+        stop();
         
+        pthread_mutex_lock(&idleQueueMutex);
         for(int i = 0 ; i < idleQueue->size(); i++){
             std::shared_ptr<Thread> thread = idleQueue->at(i);
             thread->stopThread();
-//            pthread_rwlock_unlock(&quitRwlock);
+
         }
         for(int i = 0 ; i < workQueue->size(); i++){
             std::shared_ptr<Thread> thread = workQueue->at(i);
             thread->stopThread();
-//            pthread_rwlock_unlock(&quitRwlock);
+
         }
-        
-//        pthread_mutex_unlock(&idleQueueMutex);
-        pthread_rwlock_unlock(&quitRwlock);
+        pthread_mutex_unlock(&idleQueueMutex);
         
     }
     
