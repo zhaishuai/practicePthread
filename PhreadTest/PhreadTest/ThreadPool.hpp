@@ -51,11 +51,23 @@ namespace threadPool{
     
     };
     
+    class Timer{
+    protected:
+        std::unique_ptr<Thread> thread;
+        double timeInterval = 0;
+        double delay = 0;
+        bool timeStarted = false;
+    public:
+        Timer(double timeInterval);
+        Timer(double delay, double timeInterval);
+        void start(std::function<void ()> func);
+    };
+    
     class ThreadPool{
     public:
         int miniThreads = 150;
         int maxThreads  = 500;
-
+        
         ThreadPool();
         ~ThreadPool();
         
@@ -70,10 +82,8 @@ namespace threadPool{
         
         void addThreadIntoPool();
         
-        pthread_mutex_t idleQueueMutex;
+        pthread_mutex_t threadQueueMutex;
         std::unique_ptr<std::deque<std::shared_ptr<Thread>>> idleQueue;
-        
-        pthread_mutex_t workQueueMutex;
         std::unique_ptr<std::vector<std::shared_ptr<Thread>>> workQueue;
         
         pthread_mutex_t taskQueueMutex;
