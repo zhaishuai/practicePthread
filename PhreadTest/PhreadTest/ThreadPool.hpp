@@ -55,18 +55,7 @@ namespace threadPool{
     public:
         int miniThreads = 150;
         int maxThreads  = 500;
-        
-        
-        
-        pthread_mutex_t idleQueueMutex;
-        std::unique_ptr<std::deque<std::shared_ptr<Thread>>> idleQueue;
-        
-        pthread_mutex_t workQueueMutex;
-        std::unique_ptr<std::vector<std::shared_ptr<Thread>>> workQueue;
-        
-        pthread_mutex_t taskQueueMutex;
-        std::unique_ptr<std::deque<std::function<void()>>> taskQueue;
-        
+
         ThreadPool();
         ~ThreadPool();
         
@@ -79,6 +68,16 @@ namespace threadPool{
     protected:
         int currentThreads = miniThreads;
         
+        void addThreadIntoPool();
+        
+        pthread_mutex_t idleQueueMutex;
+        std::unique_ptr<std::deque<std::shared_ptr<Thread>>> idleQueue;
+        
+        pthread_mutex_t workQueueMutex;
+        std::unique_ptr<std::vector<std::shared_ptr<Thread>>> workQueue;
+        
+        pthread_mutex_t taskQueueMutex;
+        std::unique_ptr<std::deque<std::function<void()>>> taskQueue;
         std::function<void ()> finishCallback;
         
     };

@@ -52,50 +52,52 @@ namespace threadPool{
         taskQueueMutex = PTHREAD_MUTEX_INITIALIZER;
         
         for(int i = 0 ; i < miniThreads ; i++){
-            std::shared_ptr<Thread> reusedThread = std::shared_ptr<Thread>(new Thread());
-            reusedThread->startThread([reusedThread, this]{
-                std::shared_ptr<Thread> thread = reusedThread;
-                while(true){
-                    pthread_testcancel();
-                    pthread_mutex_lock(&taskQueueMutex);
-                    std::function<void()> func;
-                    if(taskQueue->size()){
-                        func = taskQueue->front();
-                        taskQueue->pop_front();
-                    }
-                    pthread_mutex_unlock(&taskQueueMutex);
-                    if(func!=nullptr)
-                        func();
-                    
-                    pthread_mutex_lock(&taskQueueMutex);
-                    if(taskQueue->size()){
-                        pthread_mutex_unlock(&taskQueueMutex);
-                        continue;
-                    }
-                    pthread_mutex_unlock(&taskQueueMutex);
-                    
-                    pthread_mutex_lock(&idleQueueMutex);
-                    idleQueue->push_back(thread);
-                    workQueue->erase(std::remove(workQueue->begin(), workQueue->end(), thread), workQueue->end());
-                    
-                    if(idleQueue->size() == currentThreads){
-                        taskQueue->shrink_to_fit();
-                        if(finishCallback != nullptr){
-                            finishCallback();
-                        }
-                    }
-                    pthread_mutex_unlock(&idleQueueMutex);
-                    
-                    pthread_mutex_lock(&thread->threadInfo.mut);
-                    pthread_cond_wait(&thread->threadInfo.cond, &thread->threadInfo.mut);
-                    pthread_mutex_unlock(&thread->threadInfo.mut);
-                }
-            });
-
+            addThreadIntoPool();
         }
 
     }
     
+    void ThreadPool::addThreadIntoPool(){
+        std::shared_ptr<Thread> reusedThread = std::shared_ptr<Thread>(new Thread());
+        reusedThread->startThread([reusedThread, this]{
+            std::shared_ptr<Thread> thread = reusedThread;
+            while(true){
+                pthread_testcancel();
+                pthread_mutex_lock(&taskQueueMutex);
+                std::function<void()> func;
+                if(taskQueue->size()){
+                    func = taskQueue->front();
+                    taskQueue->pop_front();
+                }
+                pthread_mutex_unlock(&taskQueueMutex);
+                if(func!=nullptr)
+                    func();
+                
+                pthread_mutex_lock(&taskQueueMutex);
+                if(taskQueue->size()){
+                    pthread_mutex_unlock(&taskQueueMutex);
+                    continue;
+                }
+                pthread_mutex_unlock(&taskQueueMutex);
+                
+                pthread_mutex_lock(&idleQueueMutex);
+                idleQueue->push_back(thread);
+                workQueue->erase(std::remove(workQueue->begin(), workQueue->end(), thread), workQueue->end());
+                
+                if(idleQueue->size() == currentThreads){
+                    taskQueue->shrink_to_fit();
+                    if(finishCallback != nullptr){
+                        finishCallback();
+                    }
+                }
+                pthread_mutex_unlock(&idleQueueMutex);
+                
+                pthread_mutex_lock(&thread->threadInfo.mut);
+                pthread_cond_wait(&thread->threadInfo.cond, &thread->threadInfo.mut);
+                pthread_mutex_unlock(&thread->threadInfo.mut);
+            }
+        });
+    }
     
     void ThreadPool::run(std::function<void()> func){
         
@@ -137,7 +139,6 @@ namespace threadPool{
             size = workQueue->size();
             sched_yield();
             pthread_mutex_unlock(&idleQueueMutex);
-            
         }
     }
     

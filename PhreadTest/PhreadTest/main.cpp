@@ -52,9 +52,9 @@ int main(int argc, const char * argv[]) {
         t_end = time(NULL) ;
         printf("time: %.0f s\n", difftime(t_end,t_start)) ;
         printf("all finished!\n");
-        printf("idle quantity: %ld\n", threadPool.idleQueue->size());
-        printf("task quantity: %ld\n", threadPool.taskQueue->size());
-        printf("work quantity: %ld\n", threadPool.workQueue->size());
+//        printf("idle quantity: %ld\n", threadPool.idleQueue->size());
+//        printf("task quantity: %ld\n", threadPool.taskQueue->size());
+//        printf("work quantity: %ld\n", threadPool.workQueue->size());
     });
     printf("main\n");
 }
