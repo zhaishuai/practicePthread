@@ -136,5 +136,31 @@ int main(int argc, const char * argv[]) {
 //////        printf("start\n");
 //    }
     
+    
+    threadPool::ThreadPool threadPool;
+    for(int i = 0; i < 4000; i++)
+        threadPool.run([i, &threadPool]{
+            printf("@@@@@@@@@@@@:%d  currentThreads:%d\n", i, threadPool.currentThreads);
+            printf("idleThreadNum:%ld  workThreadNum:%ld\n", threadPool.idleQueue->size(), threadPool.workQueue->size());
+            sleep(1);
+            
+            
+        });
+    
+//    threadPool::Timer timer(500);
+//        int index = 0;
+//        timer.start([&index, &timer]{
+//            if(index>=10){
+//                timer.stop();
+//            }
+//            index++;
+//            printf("start\n");
+//        });
+    
+    while (true){
+//        printf("finish\n");
+        printf("idleThreadNum:%ld  workThreadNum:%ld\n", threadPool.idleQueue->size(), threadPool.workQueue->size());
+        sleep(1);
+    }
     return 0;
 }

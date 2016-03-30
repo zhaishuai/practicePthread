@@ -20,7 +20,7 @@ namespace threadPool{
         pthread_exit(0);
     }
     
-
+    
     
     Thread::Thread(){
         threadInfo.mut  = PTHREAD_MUTEX_INITIALIZER;
@@ -37,7 +37,7 @@ namespace threadPool{
         threadInfo.threadId = pthread_create(&threadInfo.pthread, NULL, threadCallback, (void *)threadData.get());
     }
     
-
+    
 #pragma mark - Timer
     
     Timer::Timer(int timeInterval){
@@ -45,6 +45,7 @@ namespace threadPool{
         this->delaytime    = 0;
         this->timeInterval = timeInterval;
         mut = PTHREAD_MUTEX_INITIALIZER;
+        timeStarted = false;
     }
     
     Timer::Timer(int delay, int timeInterval){
@@ -53,17 +54,21 @@ namespace threadPool{
         this->timeInterval = timeInterval;
         mut                = PTHREAD_MUTEX_INITIALIZER;
         quitMut            = PTHREAD_MUTEX_INITIALIZER;
+        timeStarted = false;
         
     }
     
     void Timer::start(std::function<void ()> func){
+        
+        if(timeStarted){
+            return;
+        }
         timeStarted = true;
-        thread->startThread([&func, this]{
-            
+        
+        
+        thread->startThread([func, this]{
+            usleep(this->delaytime*1000);
             while (true) {
-                pthread_mutex_lock(&quitMut);
-                pthread_testcancel();
-                usleep(this->delaytime*1000);
                 if(func!=nullptr){
                     func();
                 }
@@ -73,7 +78,6 @@ namespace threadPool{
                     break;
                 }
                 pthread_mutex_unlock(&mut);
-                pthread_mutex_unlock(&quitMut);
             }
             
         });
@@ -100,18 +104,22 @@ namespace threadPool{
         idleQueue = std::unique_ptr<std::deque<std::shared_ptr<Thread>>>(new std::deque<std::shared_ptr<Thread>>);
         workQueue = std::unique_ptr<std::vector<std::shared_ptr<Thread>>>(new std::vector<std::shared_ptr<Thread>>);
         taskQueue = std::unique_ptr<std::deque<std::function<void()>>>(new std::deque<std::function<void ()>>);
+        addThreadTimer    = std::unique_ptr<Timer>(new Timer(500,500));
+        removeThreadTimer = std::unique_ptr<Timer>(new Timer(1000, 1000));
         
         threadQueueMutex = PTHREAD_MUTEX_INITIALIZER;
         taskQueueMutex   = PTHREAD_MUTEX_INITIALIZER;
-        
-        for(int i = 0 ; i < miniThreads ; i++){
-            addThreadIntoPool();
+        finishInit = false;
+        for(int i = 0 ; i < minThreads ; i++){
+            std::shared_ptr<Thread> reusedThread = std::shared_ptr<Thread>(new Thread());
+            startThread(reusedThread);
         }
-
+        
     }
     
-    void ThreadPool::addThreadIntoPool(){
-        std::shared_ptr<Thread> reusedThread = std::shared_ptr<Thread>(new Thread());
+    
+    void ThreadPool::startThread(std::shared_ptr<Thread> reusedThread){
+        
         reusedThread->startThread([reusedThread, this]{
             std::shared_ptr<Thread> thread = reusedThread;
             while(true){
@@ -136,11 +144,33 @@ namespace threadPool{
                 pthread_mutex_lock(&threadQueueMutex);
                 idleQueue->push_back(thread);
                 workQueue->erase(std::remove(workQueue->begin(), workQueue->end(), thread), workQueue->end());
-                
-                if(idleQueue->size() == currentThreads){
-                    taskQueue->shrink_to_fit();
-                    if(finishCallback != nullptr){
-                        finishCallback();
+                // 判断线程池中的任务是否被全部完成
+                //
+                if(idleQueue->size() == currentThreads && taskQueue->size() == 0 ){
+                    if(finishInit){
+                        
+                        taskQueue->shrink_to_fit();
+                        // 线程池中所有线程结束任务后开启移除大于minThreads部分线程。
+                        //
+                        removeThreadTimer->start([this]{
+                            
+                            if(currentThreads > minThreads){
+                                pthread_mutex_lock(&threadQueueMutex);
+                                idleQueue->pop_front();
+                                currentThreads --;
+                                pthread_mutex_unlock(&threadQueueMutex);
+                            }else{
+                                removeThreadTimer->stop();
+                            }
+                        });
+                        
+                        // 回调，线程池已完成全部任务
+                        //
+                        if(finishCallback != nullptr){
+                            finishCallback();
+                        }
+                    }else{
+                        finishInit = true;
                     }
                 }
                 pthread_mutex_unlock(&threadQueueMutex);
@@ -152,8 +182,18 @@ namespace threadPool{
         });
     }
     
-    void ThreadPool::run(std::function<void()> func){
+    void ThreadPool::addThreadIntoPool(){
+        std::shared_ptr<Thread> reusedThread = std::shared_ptr<Thread>(new Thread());
+        pthread_mutex_lock(&threadQueueMutex);
+        workQueue->push_back(reusedThread);
+        currentThreads ++;
+        pthread_mutex_unlock(&threadQueueMutex);
+        startThread(reusedThread);
         
+    }
+    
+    void ThreadPool::run(std::function<void()> func){
+        removeThreadTimer->stop();
         pthread_mutex_lock(&threadQueueMutex);
         std::shared_ptr<Thread> thread = nullptr;
         if(idleQueue->size()){
@@ -162,10 +202,21 @@ namespace threadPool{
             workQueue->push_back(thread);
         }
         pthread_mutex_unlock(&threadQueueMutex);
-    
+        
         
         pthread_mutex_lock(&taskQueueMutex);
         taskQueue->push_back(func);
+        // 判断是否要添加新的线程
+        //
+        if(taskQueue->size()&&currentThreads < maxThreads){
+            addThreadTimer->start([this]{
+                addThreadIntoPool();
+                if(!(taskQueue->size()&&currentThreads < maxThreads)){
+                    addThreadTimer->stop();
+                }
+            });
+        }
+        
         pthread_mutex_unlock(&taskQueueMutex);
         
         if(thread){
@@ -197,6 +248,11 @@ namespace threadPool{
     
     ThreadPool::~ThreadPool(){
         stop();
+        pthread_mutex_lock(&threadQueueMutex);
+        for(int i = 0 ; i < idleQueue->size() ; i ++){
+            pthread_cancel(idleQueue->at(i)->threadInfo.pthread);
+        }
+        pthread_mutex_unlock(&threadQueueMutex);
     }
     
 }
