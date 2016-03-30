@@ -72,7 +72,9 @@ namespace threadPool{
         int minThreads = 150;
         int maxThreads  = 300;
         
+        
         ThreadPool();
+        ThreadPool(int increaseInterval, int decreaseInterval);
         ~ThreadPool();
         
         void run(std::function<void()> func);
@@ -81,14 +83,11 @@ namespace threadPool{
         
         void allTaskFinished(std::function<void ()> func);
         
+        int getCurrentThreads();
         
-        int currentThreads = minThreads;
-        
-        std::unique_ptr<std::deque<std::shared_ptr<Thread>>> idleQueue;
-        
-        std::unique_ptr<std::vector<std::shared_ptr<Thread>>> workQueue;
     protected:
         
+        int currentThreads = minThreads;
         bool finishInit = false;
         std::unique_ptr<Timer> addThreadTimer;
         std::unique_ptr<Timer> removeThreadTimer;
@@ -97,8 +96,8 @@ namespace threadPool{
         void startThread(std::shared_ptr<Thread> thread);
         
         pthread_mutex_t threadQueueMutex;
-        
-        
+        std::unique_ptr<std::deque<std::shared_ptr<Thread>>> idleQueue;
+        std::unique_ptr<std::vector<std::shared_ptr<Thread>>> workQueue;
         
         pthread_mutex_t taskQueueMutex;
         std::unique_ptr<std::deque<std::function<void()>>> taskQueue;

@@ -137,15 +137,21 @@ int main(int argc, const char * argv[]) {
 //    }
     
     
-    threadPool::ThreadPool threadPool;
-    for(int i = 0; i < 4000; i++)
+    threadPool::ThreadPool threadPool(700,800);
+    threadPool.allTaskFinished([&threadPool]{
+        printf("currentThread:%d\n", threadPool.getCurrentThreads());
+    });
+    for(int j = 0 ; j < 10 ; j++){
+    for(int i = 0; i < 2000; i++)
         threadPool.run([i, &threadPool]{
-            printf("@@@@@@@@@@@@:%d  currentThreads:%d\n", i, threadPool.currentThreads);
-            printf("idleThreadNum:%ld  workThreadNum:%ld\n", threadPool.idleQueue->size(), threadPool.workQueue->size());
-            sleep(1);
+            printf("@@@@@@@@@@@@:%d  currentThreads:%d\n", i, threadPool.getCurrentThreads());
+//            printf("idleThreadNum:%ld  workThreadNum:%ld\n", threadPool.idleQueue->size(), threadPool.workQueue->size());
+            usleep(1000*500);
             
             
         });
+    sleep(5);
+    }
     
 //    threadPool::Timer timer(500);
 //        int index = 0;
@@ -158,8 +164,9 @@ int main(int argc, const char * argv[]) {
 //        });
     
     while (true){
+        printf("currentThreads:%d\n", threadPool.getCurrentThreads());
 //        printf("finish\n");
-        printf("idleThreadNum:%ld  workThreadNum:%ld\n", threadPool.idleQueue->size(), threadPool.workQueue->size());
+//        printf("idleThreadNum:%ld  workThreadNum:%ld\n", threadPool.idleQueue->size(), threadPool.workQueue->size());
         sleep(1);
     }
     return 0;
