@@ -137,20 +137,21 @@ int main(int argc, const char * argv[]) {
 //    }
     
     
-    threadPool::ThreadPool threadPool(700,800);
+    threadPool::ThreadPool threadPool(400,1000);
     threadPool.allTaskFinished([&threadPool]{
         printf("currentThread:%d\n", threadPool.getCurrentThreads());
     });
-    for(int j = 0 ; j < 10 ; j++){
+    for(int j = 0 ; j < 100 ; j++){
     for(int i = 0; i < 2000; i++)
         threadPool.run([i, &threadPool]{
             printf("@@@@@@@@@@@@:%d  currentThreads:%d\n", i, threadPool.getCurrentThreads());
 //            printf("idleThreadNum:%ld  workThreadNum:%ld\n", threadPool.idleQueue->size(), threadPool.workQueue->size());
-            usleep(1000*500);
+            usleep(1000*300);
             
             
         });
-    sleep(5);
+//    sleep(5);
+        sleep(5);
     }
     
 //    threadPool::Timer timer(500);
