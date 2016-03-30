@@ -20,11 +20,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "PhreadTest/main.cpp"
-            timestampString = "480959528.55193"
+            timestampString = "480999229.853662"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "138"
-            endingLineNumber = "138">
+            startingLineNumber = "109"
+            endingLineNumber = "109"
+            landmarkName = "main(int argc, const char * argv[])"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

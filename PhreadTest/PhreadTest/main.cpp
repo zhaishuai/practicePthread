@@ -28,8 +28,10 @@ int main(int argc, const char * argv[]) {
 //        threadPool::Thread thread;
 //        thread.startThread([&i, &thread]{
 //            
-//            thread.stopThread();
-//            printf("hello ,%d\n", i-1);
+////            thread.stopThread();
+////            sleep(1);
+//            printf("hello ,%d\n", i);
+//            
 //        });
 //    }
     /*
@@ -110,26 +112,29 @@ int main(int argc, const char * argv[]) {
     
 //    t_end = time(NULL) ;
 //    printf("time: %.0f s\n", difftime(t_end,t_start)) ;
-    
-    threadPool::Timer timer(1000);
-    int index = 0;
-    timer.start([&index, &timer]{
-        if(index>=10){
-            timer.stop();
-        }
-        index++;
-        printf("start\n");
-    });
-    
-    while (true) {
-//        struct timeval delay;
-//        delay.tv_sec = 0;
-//        delay.tv_usec = 0 * 1000; // 20 ms
-//        select(0, NULL, NULL, NULL, &delay);
-//        sleep(1);
-        usleep(1000 * 100);
+//    
+//    for(int i = 0 ; i < 10000; i++){
+////
+//    threadPool::Timer timer(10);
+//    int index = 0;
+//    timer.start([&index, &timer]{
+//        if(index>=10){
+//            timer.stop();
+//        }
+//        index++;
 //        printf("start\n");
-    }
+//    });
+//    }
+
+//    while (true) {
+//////        struct timeval delay;
+//////        delay.tv_sec = 0;
+//////        delay.tv_usec = 0 * 1000; // 20 ms
+//////        select(0, NULL, NULL, NULL, &delay);
+//////        sleep(1);
+//        usleep(1000 * 100);
+//////        printf("start\n");
+//    }
     
     return 0;
 }

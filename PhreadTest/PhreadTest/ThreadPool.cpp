@@ -7,16 +7,15 @@
 //
 
 #include "ThreadPool.hpp"
-
+#include <signal.h>
 
 namespace threadPool{
-    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     
     
     void *threadCallback(void *data){
         pthread_mutex_unlock(&mutex);
         ThreadData *threadData = ((ThreadData *)data);
-        
         threadData->callback();
         pthread_exit(0);
     }
@@ -26,34 +25,34 @@ namespace threadPool{
     Thread::Thread(){
         threadInfo.mut  = PTHREAD_MUTEX_INITIALIZER;
         threadInfo.cond = PTHREAD_COND_INITIALIZER;
-        
+    }
+    
+    Thread::~Thread(){
+        pthread_join(threadInfo.pthread, NULL);
     }
     
     void Thread::startThread( std::function<void ()> func){
         pthread_mutex_lock( &mutex);
-        threadData = std::unique_ptr<ThreadData>(new ThreadData{this, func});
-        pthread_detach(threadInfo.pthread);
+        threadData          = std::unique_ptr<ThreadData>(new ThreadData{this, func});
         threadInfo.threadId = pthread_create(&threadInfo.pthread, NULL, threadCallback, (void *)threadData.get());
     }
     
-    void Thread::stopThread(){
-        pthread_cancel(threadInfo.pthread);
-    }
 
 #pragma mark - Timer
     
     Timer::Timer(int timeInterval){
-        thread = std::unique_ptr<Thread>(new Thread);
-        this->delaytime = 0;
+        thread             = std::unique_ptr<Thread>(new Thread);
+        this->delaytime    = 0;
         this->timeInterval = timeInterval;
         mut = PTHREAD_MUTEX_INITIALIZER;
     }
     
     Timer::Timer(int delay, int timeInterval){
-        thread = std::unique_ptr<Thread>(new Thread);
-        this->delaytime = delay;
+        thread             = std::unique_ptr<Thread>(new Thread);
+        this->delaytime    = delay;
         this->timeInterval = timeInterval;
-        mut = PTHREAD_MUTEX_INITIALIZER;
+        mut                = PTHREAD_MUTEX_INITIALIZER;
+        quitMut            = PTHREAD_MUTEX_INITIALIZER;
         
     }
     
@@ -62,6 +61,8 @@ namespace threadPool{
         thread->startThread([&func, this]{
             
             while (true) {
+                pthread_mutex_lock(&quitMut);
+                pthread_testcancel();
                 usleep(this->delaytime*1000);
                 if(func!=nullptr){
                     func();
@@ -72,6 +73,7 @@ namespace threadPool{
                     break;
                 }
                 pthread_mutex_unlock(&mut);
+                pthread_mutex_unlock(&quitMut);
             }
             
         });
@@ -83,12 +85,14 @@ namespace threadPool{
         pthread_mutex_unlock(&mut);
     }
     
-//    Timer::~Timer(){
-//        stop();
-//        while (size != 0) {
-//            sched_yield();
-//        }
-//    }
+    Timer::~Timer(){
+        
+        pthread_mutex_lock(&quitMut);
+        stop();
+        pthread_cancel(thread->threadInfo.pthread);
+        pthread_mutex_unlock(&quitMut);
+        
+    }
     
 #pragma mark - ThreadPool
     
@@ -98,7 +102,7 @@ namespace threadPool{
         taskQueue = std::unique_ptr<std::deque<std::function<void()>>>(new std::deque<std::function<void ()>>);
         
         threadQueueMutex = PTHREAD_MUTEX_INITIALIZER;
-        taskQueueMutex = PTHREAD_MUTEX_INITIALIZER;
+        taskQueueMutex   = PTHREAD_MUTEX_INITIALIZER;
         
         for(int i = 0 ; i < miniThreads ; i++){
             addThreadIntoPool();
@@ -192,22 +196,7 @@ namespace threadPool{
     }
     
     ThreadPool::~ThreadPool(){
-        
         stop();
-        
-        pthread_mutex_lock(&threadQueueMutex);
-        for(int i = 0 ; i < idleQueue->size(); i++){
-            std::shared_ptr<Thread> thread = idleQueue->at(i);
-            thread->stopThread();
-
-        }
-        for(int i = 0 ; i < workQueue->size(); i++){
-            std::shared_ptr<Thread> thread = workQueue->at(i);
-            thread->stopThread();
-
-        }
-        pthread_mutex_unlock(&threadQueueMutex);
-        
     }
     
 }

@@ -38,16 +38,14 @@ namespace threadPool{
     class Thread{
     protected:
         std::unique_ptr<ThreadData> threadData;
-    
+        pthread_mutex_t quitMutex;
     public:
         bool shouldQuit = false;
         ThreadInfo threadInfo;
         
         Thread();
-        
+        ~Thread();
         void startThread(std::function<void ()> func);
-        
-        void stopThread();
     
     };
     
@@ -57,14 +55,14 @@ namespace threadPool{
         int timeInterval = 0;
         int delaytime = 0;
         bool timeStarted = false;
-        pthread_mutex_t mut;
+        pthread_mutex_t mut, quitMut;
     public:
         Timer(int timeInterval);
         
         // 都是以毫秒为单位
         //
         Timer(int delay, int timeInterval);
-//        ~Timer();
+        ~Timer();
         void start(std::function<void ()> func);
         void stop();
     };
