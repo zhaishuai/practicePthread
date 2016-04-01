@@ -138,11 +138,12 @@ int main(int argc, const char * argv[]) {
     
     
     threadPool::ThreadPool threadPool(400,1000);
+    sleep(1);
     threadPool.allTaskFinished([&threadPool]{
         printf("currentThread:%d\n", threadPool.getCurrentThreads());
     });
-    sleep(1);
 //    for(int j = 0 ; j < 100 ; j++){
+    
     for(int i = 0; i < 2000; i++)
         threadPool.run([i, &threadPool]{
             printf("@@@@@@@@@@@@:%d  currentThreads:%d\n", i, threadPool.getCurrentThreads());
