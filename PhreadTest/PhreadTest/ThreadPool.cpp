@@ -170,7 +170,7 @@ namespace threadPool{
                 //
                 if(idleQueue->size() == currentThreads && taskQueue->size() == 0 ){
                     if(finishInit){
-                        
+                    addThreadTimer->stop();
                         taskQueue->shrink_to_fit();
                         // 线程池中所有线程结束任务后开启移除大于minThreads部分线程。
                         //
@@ -185,13 +185,12 @@ namespace threadPool{
                                 removeThreadTimer->stop();
                             }
                         });
-                        
+                    
                         // 回调，线程池已完成全部任务
                         //
                         if(finishCallback != nullptr){
                             finishCallback();
                         }
-                        finishInit = false;
                     }
                         finishInit = true;
                 }
@@ -235,6 +234,7 @@ namespace threadPool{
                 addThreadIntoPool();
                 if(!(taskQueue->size()&&currentThreads < maxThreads)){
                     addThreadTimer->stop();
+                    finishInit = false;
                 }
             });
         }

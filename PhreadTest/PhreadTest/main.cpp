@@ -112,7 +112,7 @@ int main(int argc, const char * argv[]) {
     
 //    t_end = time(NULL) ;
 //    printf("time: %.0f s\n", difftime(t_end,t_start)) ;
-//    
+//
 //    for(int i = 0 ; i < 10000; i++){
 ////
 //    threadPool::Timer timer(10);
@@ -141,7 +141,8 @@ int main(int argc, const char * argv[]) {
     threadPool.allTaskFinished([&threadPool]{
         printf("currentThread:%d\n", threadPool.getCurrentThreads());
     });
-    for(int j = 0 ; j < 100 ; j++){
+    sleep(1);
+//    for(int j = 0 ; j < 100 ; j++){
     for(int i = 0; i < 2000; i++)
         threadPool.run([i, &threadPool]{
             printf("@@@@@@@@@@@@:%d  currentThreads:%d\n", i, threadPool.getCurrentThreads());
@@ -151,8 +152,8 @@ int main(int argc, const char * argv[]) {
             
         });
 //    sleep(5);
-        sleep(5);
-    }
+//        sleep(5);
+//    }
     
 //    threadPool::Timer timer(500);
 //        int index = 0;
@@ -165,7 +166,7 @@ int main(int argc, const char * argv[]) {
 //        });
     
     while (true){
-        printf("currentThreads:%d\n", threadPool.getCurrentThreads());
+        printf("dddddd currentThreads:%d\n", threadPool.getCurrentThreads());
 //        printf("finish\n");
 //        printf("idleThreadNum:%ld  workThreadNum:%ld\n", threadPool.idleQueue->size(), threadPool.workQueue->size());
         sleep(1);
